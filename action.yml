@@ -1,21 +1,26 @@
-# action.yml
 name: 'YAML Region Tag Generator'
-description: 'autogenerate devsite region tags'
+description: 'Adds YAML region tags'
+author: 'askmeegs'
+branding:
+  icon: code
+  color: yellow
 inputs:
-  product:
-    description: 'GCP Product Name'
-    required: true
-    default: 'GKE'
-  repo_url:
-    description: 'repo URL'
+  github_token:
+    description: 'github id_rsa token'
     required: true
     default: ''
-outputs:
-  total:
-    description: 'the number of YAML region tags generated'
+  repository:
+    description: 'repository name'
+    default: ''
+    required: true
+  branch:
+    description: 'destination branch'
+    required: true
+    default: ''
 runs:
   using: 'docker'
   image: 'Dockerfile'
   args:
-    - ${{ inputs.product }}
-    - ${{ inputs.repo_url }}
+    - ${{ inputs.github_token }}
+    - ${{ inputs.repository }}
+    - ${{ inputs.branch }}
