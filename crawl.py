@@ -4,6 +4,7 @@ import os
 import git
 import time
 import shutil
+import subprocess
 
 from time import gmtime, strftime
 
@@ -76,24 +77,27 @@ def process_file(product, twoup, oneup, fn):
             output.write("---\n")
     output.close()
 
-
 def clone_repo(github_user, github_repo_name, branch, local_path):
     global repo
-    repo_clone_url = "git@github.com:{}/{}.git".format(github_user, github_repo_name)
+    repo_clone_url = 'git@github.com:{}/{}.git'.format(github_user, github_repo_name)
     repo = git.Repo.clone_from(repo_clone_url, local_path)
     repo.git.checkout(branch)
 
-def push_to_repo():
+def push_to_repo(local_path, branch):
     global repo
-    dt = strftime("%d/%m/%Y %H:%M:%S", gmtime())
-    COMMIT_MESSAGE = '[bot] generate YAML region tags {}'.format(dt)
-    try:
-        repo.git.add(update=True)
-        repo.index.commit(COMMIT_MESSAGE)
-        origin = repo.remote(name='origin')
-        origin.push()
-    except:
-        print('Some error occurred while pushing the code')
+    dt = strftime("%m/%d/%Y %h:%M:%S", gmtime())
+    dir_path = os.path.dirname(os.path.realpath(__file__))
+
+    my_env = os.environ.copy()
+    my_env["LOCAL_PATH"] = local_path
+    my_env["BRANCH"] = branch
+    my_env["COMMIT_MESSAGE"] = '[bot] generate YAML region tags {}'.format(dt)
+    cmd = '{}/push.sh'.format(dir_path)
+
+    # use script to push to github, as yamlbot
+    # (no error catching / logs when doing this in python)
+    a = subprocess.run(cmd, stdout=subprocess.PIPE, env=my_env)
+    print(a.stdout.decode('utf-8'))
 
 
 def log_results():
@@ -142,5 +146,5 @@ if __name__ == "__main__":
         twoup = spl[-2]
         process_file(product, twoup, oneup, fn)
 
-    push_to_repo()
+    push_to_repo(local_path, branch)
     log_results()
