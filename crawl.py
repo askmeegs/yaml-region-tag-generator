@@ -1,8 +1,11 @@
 import yaml
 from pathlib import Path
 import os
-from git import Repo
+import git
 import time
+import shutil
+
+from time import gmtime, strftime
 
 
 google_license = """
@@ -22,6 +25,7 @@ google_license = """
 """
 
 all_results = {}
+repo = None
 
 def generate_region_tag(product, twoup, oneup, snippet):
     if 'kind' not in snippet:
@@ -73,31 +77,60 @@ def process_file(product, twoup, oneup, fn):
     output.close()
 
 
+def clone_repo(github_user, github_repo_name, branch, local_path):
+    global repo
+    repo_clone_url = "git@github.com:{}/{}.git".format(github_user, github_repo_name)
+    repo = git.Repo.clone_from(repo_clone_url, local_path)
+    repo.git.checkout(branch)
+
+def push_to_repo():
+    global repo
+    dt = strftime("%d/%m/%Y %H:%M:%S", gmtime())
+    COMMIT_MESSAGE = '[bot] generate YAML region tags {}'.format(dt)
+    try:
+        repo.git.add(update=True)
+        repo.index.commit(COMMIT_MESSAGE)
+        origin = repo.remote(name='origin')
+        origin.push()
+    except:
+        print('Some error occurred while pushing the code')
+
+
 def log_results():
     global all_results
-    print("total resources processed: {}".format(len(all_results.keys())))
+    print("✅ success: total resources processed: {}".format(len(all_results.keys())))
 
 
 if __name__ == "__main__":
-    # repo_path = os.environ['REPO_PATH']
-    # if repo_path == "":
-    #     print("Error: REPO_PATH env variable must be set.")
-    #     os.exit(1)
-
-    # # clone git directory
-    # git.Git("/tmp/").clone("git://{}.git".format(repo_path))
-
-    # # clone repo
-
-    # prepare to process snippets
+    # process env
     product = os.environ['PRODUCT']
     if product == "":
         print("Error: PRODUCT env variable must be set")
         os.exit(1)
 
 
-    path = Path('/Users/mokeefe/go/src/github.com/askmeegs/istio-samples')
-    # path = Path("/tmp/{}".format(repo_path))
+    github_user = os.environ['GITHUB_USER']
+    if github_user == "":
+        print("Error: GITHUB_USER env variable must be set.")
+        os.exit(1)
+
+    github_repo_name = os.environ['GITHUB_REPO_NAME']
+    if github_repo_name == "":
+        print("Error: GITHUB_REPO_NAME env variable must be set.")
+        os.exit(1)
+
+    branch = os.environ['REPO_BRANCH']
+    if branch == "":
+        print("Error: REPO_BRANCH env variable must be set.")
+        os.exit(1)
+
+    # clone repo
+    local_path = "/tmp/{}".format(github_repo_name)
+    shutil.rmtree(local_path, ignore_errors=True)
+    clone_repo(github_user, github_repo_name, branch, local_path)
+
+    # prepare to process snippets
+    path = Path(local_path)
 
     for p in path.rglob("*.yaml"):
         filename = p.name
@@ -109,7 +142,5 @@ if __name__ == "__main__":
         twoup = spl[-2]
         process_file(product, twoup, oneup, fn)
 
+    push_to_repo()
     log_results()
-
-    # TODO - commit changes to repo
-    # todo - handle git authentication?
