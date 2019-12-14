@@ -77,8 +77,19 @@ def process_file(product, twoup, oneup, fn):
             output.write("---\n")
     output.close()
 
-def clone_repo(github_repository, branch, local_path):
+def clone_repo(id_rsa, known_hosts, github_repository, branch, local_path):
     global repo
+
+    # prep to clone
+    my_env = os.environ.copy()
+    my_env["SSH_PRIVATE_KEY"] = id_rsa
+    my_env["KNOWN_HOSTS"] = known_hosts
+    dir_path = os.path.dirname(os.path.realpath(__file__))
+    cmd = '{}/clone_prep.sh'.format(dir_path)
+    a = subprocess.run(cmd, stdout=subprocess.PIPE, env=my_env)
+    print(a.stdout.decode('utf-8'))
+
+    # clone
     repo_clone_url = 'git@github.com:{}.git'.format(github_repository)
     repo = git.Repo.clone_from(repo_clone_url, local_path)
     repo.git.checkout(branch)
@@ -106,16 +117,16 @@ def log_results():
 
 
 if __name__ == "__main__":
-    # write known hosts, id_rsa
-    with open('~/.ssh/id_rsa','w') as f:
-        f.write(os.environ['ID_RSA'])
-        f.close()
+    id_rsa = os.environ['ID_RSA']
+    if id_rsa == "":
+        print("Error: ID_RSA env variable must be set")
+        os.exit(1)
 
-    with open('~/.ssh/known_hosts','w') as f:
-        f.write(os.environ['KNOWN_HOSTS'])
-        f.close()
+    known_hosts = os.environ['KNOWN_HOSTS']
+    if known_hosts == "":
+        print("Error: KNOWN_HOSTS env variable must be set")
+        os.exit(1)
 
-    # process rest of env
     product = os.environ['PRODUCT']
     if product == "":
         print("Error: PRODUCT env variable must be set")
@@ -135,7 +146,7 @@ if __name__ == "__main__":
     # clone repo
     local_path = "/tmp/{}".format(github_repo_name)
     shutil.rmtree(local_path, ignore_errors=True)
-    clone_repo(github_repo_name, branch, local_path)
+    clone_repo(id_rsa, known_hosts, github_repo_name, branch, local_path)
 
     # prepare to process snippets
     path = Path(local_path)

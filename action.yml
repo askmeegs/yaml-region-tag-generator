@@ -1,26 +1,16 @@
-name: 'YAML Region Tag Generator'
-description: 'Adds YAML region tags'
-author: 'askmeegs'
-branding:
-  icon: code
-  color: yellow
+# action.yml
+name: 'Hello World'
+description: 'Greet someone and record the time'
 inputs:
-  github_token:
-    description: 'github id_rsa token'
+  who-to-greet:  # id of input
+    description: 'Who to greet'
     required: true
-    default: ''
-  repository:
-    description: 'repository name'
-    default: ''
-    required: true
-  branch:
-    description: 'destination branch'
-    required: true
-    default: ''
+    default: 'World'
+outputs:
+  time: # id of output
+    description: 'The time we greeted you'
 runs:
   using: 'docker'
   image: 'Dockerfile'
   args:
-    - ${{ inputs.github_token }}
-    - ${{ inputs.repository }}
-    - ${{ inputs.branch }}
+    - ${{ inputs.who-to-greet }}
