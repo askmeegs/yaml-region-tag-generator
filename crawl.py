@@ -92,7 +92,8 @@ def clone_repo(id_rsa, known_hosts, github_repository, branch, local_path):
     # clone
     repo_clone_url = 'git@github.com:{}.git'.format(github_repository)
     repo = git.Repo.clone_from(repo_clone_url, local_path)
-    repo.git.checkout(branch)
+    spl = branch.split["/"]
+    repo.git.checkout(spl[-1])
 
 def push_to_repo(local_path, branch):
     global repo
