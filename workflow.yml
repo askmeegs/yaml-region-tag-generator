@@ -9,6 +9,6 @@ steps:
   - "pip install -r requirements.txt"
 - run: python crawl.py
   env:
-    ID_RSA: ${{ secrets.id_rsa }}
+    SSH_PRIVATE_KEY: ${{ secrets.id_rsa }}
     KNOWN_HOSTS: ${{ secrets.known_hosts }}
     PRODUCT: "istio"
