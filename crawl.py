@@ -77,9 +77,9 @@ def process_file(product, twoup, oneup, fn):
             output.write("---\n")
     output.close()
 
-def clone_repo(github_user, github_repo_name, branch, local_path):
+def clone_repo(github_repository, branch, local_path):
     global repo
-    repo_clone_url = 'git@github.com:{}/{}.git'.format(github_user, github_repo_name)
+    repo_clone_url = 'git@github.com:{}.git'.format(github_repository)
     repo = git.Repo.clone_from(repo_clone_url, local_path)
     repo.git.checkout(branch)
 
@@ -106,32 +106,36 @@ def log_results():
 
 
 if __name__ == "__main__":
-    # process env
+    # write known hosts, id_rsa
+    with open('~/.ssh/id_rsa','w') as f:
+        f.write(os.environ['ID_RSA'])
+        f.close()
+
+    with open('~/.ssh/known_hosts','w') as f:
+        f.write(os.environ['KNOWN_HOSTS'])
+        f.close()
+
+    # process rest of env
     product = os.environ['PRODUCT']
     if product == "":
         print("Error: PRODUCT env variable must be set")
         os.exit(1)
 
 
-    github_user = os.environ['GITHUB_USER']
-    if github_user == "":
-        print("Error: GITHUB_USER env variable must be set.")
-        os.exit(1)
-
-    github_repo_name = os.environ['GITHUB_REPO_NAME']
+    github_repo_name = os.environ['GITHUB_REPOSITORY']
     if github_repo_name == "":
-        print("Error: GITHUB_REPO_NAME env variable must be set.")
+        print("Error: GITHUB_REPOSITORY env variable must be set.")
         os.exit(1)
 
-    branch = os.environ['REPO_BRANCH']
+    branch = os.environ['GITHUB_REF']
     if branch == "":
-        print("Error: REPO_BRANCH env variable must be set.")
+        print("Error: GITHUB_REF env variable must be set.")
         os.exit(1)
 
     # clone repo
     local_path = "/tmp/{}".format(github_repo_name)
     shutil.rmtree(local_path, ignore_errors=True)
-    clone_repo(github_user, github_repo_name, branch, local_path)
+    clone_repo(github_repo_name, branch, local_path)
 
     # prepare to process snippets
     path = Path(local_path)

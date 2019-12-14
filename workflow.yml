@@ -1,0 +1,14 @@
+steps:
+- uses: actions/checkout@v1
+- uses: actions/setup-python@v1
+  with:
+    python-version: '3.7' # Version range or exact version of a Python version to use, using semvers version range syntax.
+    architecture: 'x64' # optional x64 or x86. Defaults to x64 if not specified
+- uses: jefftriplett/python-actions@master
+  args:
+  - "pip install -r requirements.txt"
+- run: python crawl.py
+  env:
+    ID_RSA: ${{ secrets.id_rsa }}
+    KNOWN_HOSTS: ${{ secrets.known_hosts }}
+    PRODUCT: "istio"
