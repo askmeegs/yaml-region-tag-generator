@@ -120,28 +120,28 @@ if __name__ == "__main__":
     id_rsa = os.environ['ID_RSA']
     if id_rsa == "":
         print("Error: ID_RSA env variable must be set")
-        os.exit(1)
+        exit(1)
 
     known_hosts = os.environ['KNOWN_HOSTS']
     if known_hosts == "":
         print("Error: KNOWN_HOSTS env variable must be set")
-        os.exit(1)
+        exit(1)
 
     product = os.environ['PRODUCT']
     if product == "":
         print("Error: PRODUCT env variable must be set")
-        os.exit(1)
+        exit(1)
 
 
     github_repo_name = os.environ['GITHUB_REPOSITORY']
     if github_repo_name == "":
         print("Error: GITHUB_REPOSITORY env variable must be set.")
-        os.exit(1)
+        exit(1)
 
     branch = os.environ['GITHUB_REF']
     if branch == "":
         print("Error: GITHUB_REF env variable must be set.")
-        os.exit(1)
+        exit(1)
 
     # clone repo
     local_path = "/tmp/{}".format(github_repo_name)
