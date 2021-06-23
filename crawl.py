@@ -10,7 +10,7 @@ from time import gmtime, strftime
 
 
 google_license = """
-# Copyright 2019 Google LLC
+# Copyright 2021 Google LLC
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -28,26 +28,38 @@ google_license = """
 all_results = {}
 repo = None
 
-def generate_region_tag(product, twoup, oneup, snippet):
+def generate_region_tag(product, twoup, oneup, fn, snippet):
+    # get the specific Kubernetes resource type, if listed. 
     if 'kind' not in snippet:
-        print("**** snippet " + snippet + "is invalid")
-        return ""
-    resource_type = snippet['kind'].lower()
-    name = snippet['metadata']['name'].lower()
-    tag = "{}_{}_{}_{}_{}".format(product, twoup, oneup, resource_type, name)
+        resource_type = "yaml"
+    else:
+        resource_type = snippet['kind'].lower()
+
+    # have the snippet name match the k8s resource name - otherwise, match to filename 
+    if 'metadata' not in snippet:
+        filename = os.path.basename(fn)
+        if filename.endswith('.yaml'):
+            filename = filename[:-5]
+        tag = "{}_{}_{}_{}_{}".format(product, twoup, oneup, resource_type, filename)
+    else: 
+        name = snippet['metadata']['name'].lower()
+        tag = "{}_{}_{}_{}_{}".format(product, twoup, oneup, resource_type, name)
     tag = tag.replace("-", "_")
     return tag
 
 
 def process_file(product, twoup, oneup, fn):
+    if oneup=="templates":
+        return 
     global all_results
     with open(fn) as file:
+        # do not process helm charts
         results = {}
         documents = yaml.load_all(file)
         for snippet in documents:
             if snippet is None:
                 continue
-            tag = generate_region_tag(product, twoup, oneup, snippet)
+            tag = generate_region_tag(product, twoup, oneup, fn, snippet)
             # handle duplicates.
             if tag in all_results:
                 print("⭐️ tag {} already in all_results, adding a #". format(tag))
